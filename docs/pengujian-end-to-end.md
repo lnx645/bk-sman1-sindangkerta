@@ -238,3 +238,55 @@ Screenshot thread (baru, tidak menghapus screenshot lama, di `docs/screenshots/`
 Pengecualian fitur ini (sengaja): tidak ada notifikasi WA/email dan tidak
 ada pesan real-time — balasan dibaca saat membuka detail pengajuan.
 Mengirim pesan tidak mengubah status dan tidak menugaskan guru BK baru.
+
+## 9. Audit responsif ulang (2026-10-29, atas permintaan "Pastikan responsive yaaa")
+
+Metode: staging segar dari kode commit 3923989 (`/tmp/bk-audit`, `migrate:fresh --force --seed`,
+serve lokal 127.0.0.1:8099), headless Chromium VPS, konteks browser terpisah per peran,
+login demo per peran. Diukur, bukan sekadar dilihat: `overflow = documentElement.scrollWidth
+> innerWidth + 1` (dan `body.scrollWidth` yang sama), plus pemeriksaan elemen yang
+keluar viewport (di luar `.table-responsive`), tinggi tombol Kirim, lebar textarea,
+dan bubble pesan. Uji stres khusus thread: 1 pesan token 180 karakter tanpa spasi dan
+1 deskripsi token 160 karakter tanpa spasi dimasukkan ke staging SAJA (bukan ke live)
+pada pengajuan siswa3/guru1 yang sudah disetujui.
+
+Hasil: **60/60 kombinasi halaman x breakpoint overflow=false, 0 elemen keluar viewport.**
+Tidak ada perbaikan kode yang diperlukan — audit LULUS semua, sehingga TIDAK ada
+commit baru dan TIDAK ada deploy ulang (live tetap commit 3923989, terverifikasi
+login publik 200 setelah audit).
+
+| Halaman | 360px | 390px | 768px | 1280px | Catatan terukur |
+|---|---|---|---|---|---|
+| Login | false | false | false | false | — |
+| Dashboard siswa | false | false | false | false | Kartu 1 kolom di HP |
+| Form pengajuan siswa | false | false | false | false | Input full-width di HP |
+| Riwayat siswa | false | false | false | false | Tabel terkungkung di `.table-responsive` |
+| Detail siswa + thread pesan | false | false | false | false | Bubble maks 250px (360), 275px (390), 420px (768); token 180 karakter terpotong rapi di dalam bubble; textarea 294px (360) / 324px (390), tombol Kirim 44px di HP |
+| Detail siswa (thread kosong) | false | false | false | false | State kosong + form tampil rapi |
+| Dashboard guru | false | false | false | false | — |
+| Daftar pengajuan guru | false | false | false | false | Tabel terkungkung di `.table-responsive` |
+| Detail guru + thread + kartu aksi | false | false | false | false | Kartu aksi menumpuk 1 kolom di HP; bubble dan textarea sama seperti detail siswa |
+| Jadwal guru | false | false | false | false | Tabel terkungkung di `.table-responsive` |
+| Dashboard admin | false | false | false | false | — |
+| Kelola akun | false | false | false | false | Tabel terkungkung di `.table-responsive` |
+| Kelola kelas | false | false | false | false | Tabel terkungkung di `.table-responsive` |
+| Kelola kategori | false | false | false | false | Tabel terkungkung di `.table-responsive` |
+| Rekap admin | false | false | false | false | Kartu rekap menumpuk 1 kolom di HP |
+| Menu hamburger (terbuka) | shown, link 51px | shown, link 51px | — (sidebar) | — (sidebar) | 4 link, masing-masing 51px (>= 44px), bisa ditekan |
+
+Catatan: tombol Kirim di tablet/desktop (768/1280px) tingginya 38px (ukuran standar
+Bootstrap di luar media query HP) — tetap bisa ditekan penuh dan tidak bertumpuk;
+aturan 44px berlaku dan terpenuhi di HP (360/390px). Navbar di 360px muat penuh
+(navbar right = lebar viewport, tombol hamburger terlihat).
+
+Screenshot bukti audit ini (tidak menghapus screenshot lama, di `docs/screenshots/`):
+- `27-thread-pesan-siswa-390.png` — detail siswa + thread, 390px (termasuk token stres)
+- `28-thread-pesan-guru-390.png` — detail guru + thread + kartu aksi, 390px
+- `29-thread-pesan-siswa-360.png` — detail siswa + thread, 360px
+- `30-thread-pesan-siswa-768.png` — detail siswa + thread, 768px
+- `31-thread-pesan-guru-768.png` — detail guru + thread, 768px
+- `32-menu-hamburger-terbuka-390.png` — menu hamburger terbuka, 390px
+
+Tes setelah audit: `php artisan test` di staging = **14 passed (102 assertions)**,
+tidak ada file aplikasi yang diubah. Pengecualian tetap: cek visual di HP pengguna
+sendiri adalah langkah terakhir; MySQL tetap belum teruji (SQLite terverifikasi).
