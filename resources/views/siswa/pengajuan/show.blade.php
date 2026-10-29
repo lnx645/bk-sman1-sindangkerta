@@ -28,6 +28,7 @@
         </div>
     @endif
 </div></div>
+@include('partials.thread-pesan', ['pengajuan' => $pengajuan, 'routePesan' => route('siswa.pengajuan.pesan.store', $pengajuan)])
 @if(in_array($pengajuan->status, \App\Models\Pengajuan::CANCELLABLE, true))
     <form method="POST" action="{{ route('siswa.pengajuan.cancel', $pengajuan) }}" onsubmit="return confirm('Batalkan pengajuan ini?')">@csrf
         <button class="btn btn-outline-danger" type="submit"><i class="bi bi-x-circle"></i> Batalkan Pengajuan</button>

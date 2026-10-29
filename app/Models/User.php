@@ -48,6 +48,12 @@ class User extends Authenticatable
         return $this->hasMany(Pengajuan::class, 'guru_bk_id');
     }
 
+    /** Pesan konsultasi yang dikirim pengguna ini. */
+    public function pesanKonsultasi(): HasMany
+    {
+        return $this->hasMany(PesanKonsultasi::class, 'pengirim_id');
+    }
+
     public function isSiswa(): bool
     {
         return $this->role === self::ROLE_SISWA;

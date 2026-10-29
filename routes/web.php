@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GuruBk\PengajuanController as GuruPengajuanController;
+use App\Http\Controllers\PesanKonsultasiController;
 use App\Http\Controllers\Siswa\PengajuanController as SiswaPengajuanController;
 use Illuminate\Support\Facades\Route;
 
@@ -29,6 +30,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/pengajuan', [SiswaPengajuanController::class, 'store'])->name('pengajuan.store');
         Route::get('/pengajuan/{pengajuan}', [SiswaPengajuanController::class, 'show'])->name('pengajuan.show');
         Route::post('/pengajuan/{pengajuan}/batalkan', [SiswaPengajuanController::class, 'cancel'])->name('pengajuan.cancel');
+        Route::post('/pengajuan/{pengajuan}/pesan', [PesanKonsultasiController::class, 'store'])->name('pengajuan.pesan.store');
     });
 
     // Guru BK
@@ -36,6 +38,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/pengajuan', [GuruPengajuanController::class, 'index'])->name('pengajuan.index');
         Route::get('/pengajuan/{pengajuan}', [GuruPengajuanController::class, 'show'])->name('pengajuan.show');
         Route::post('/pengajuan/{pengajuan}/aksi', [GuruPengajuanController::class, 'action'])->name('pengajuan.action');
+        Route::post('/pengajuan/{pengajuan}/pesan', [PesanKonsultasiController::class, 'store'])->name('pengajuan.pesan.store');
         Route::get('/jadwal', [GuruPengajuanController::class, 'jadwalIndex'])->name('jadwal.index');
     });
 

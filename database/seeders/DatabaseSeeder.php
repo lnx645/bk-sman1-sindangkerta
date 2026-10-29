@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\CatatanSesi;
 use App\Models\Jadwal;
+use App\Models\PesanKonsultasi;
 use App\Models\KategoriKonsultasi;
 use App\Models\Kelas;
 use App\Models\Pengajuan;
@@ -71,6 +72,9 @@ class DatabaseSeeder extends Seeder
             'waktu_diminta' => now()->addDays(3)->setTime(9, 0), 'status' => 'disetujui',
         ]);
         Jadwal::create(['pengajuan_id' => $pDisetujui->id, 'waktu_final' => now()->addDays(3)->setTime(9, 0), 'tempat' => 'Ruang BK', 'metode' => 'tatap_muka']);
+        // Thread pesan contoh (data demo) supaya balasan langsung terlihat saat demo.
+        PesanKonsultasi::create(['pengajuan_id' => $pDisetujui->id, 'pengirim_id' => $siswa[2]->id, 'isi' => 'Contoh demo: terima kasih, Bu/Pak. Saya sudah siap untuk sesi konsultasi sesuai jadwal.']);
+        PesanKonsultasi::create(['pengajuan_id' => $pDisetujui->id, 'pengirim_id' => $guru1->id, 'isi' => 'Contoh demo: sama-sama, silakan datang ke Ruang BK sesuai jadwal dan bawa daftar pertanyaanmu ya.']);
 
         $buat([
             'siswa_id' => $siswa[0]->id, 'guru_bk_id' => $guru2->id, 'kategori_id' => $kategori[2]->id,

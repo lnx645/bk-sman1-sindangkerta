@@ -48,7 +48,7 @@ class PengajuanController extends Controller
     {
         $this->authorizeOwnership($pengajuan);
 
-        $pengajuan->load(['kategori', 'guruBk', 'jadwal', 'catatanSesi']);
+        $pengajuan->load(['kategori', 'guruBk', 'jadwal', 'catatanSesi', 'pesan' => fn ($q) => $q->orderBy('created_at')->orderBy('id')->with('pengirim')]);
 
         return view('siswa.pengajuan.show', compact('pengajuan'));
     }

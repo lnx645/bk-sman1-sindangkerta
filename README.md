@@ -16,6 +16,7 @@ melalui CDN — tanpa proses build Vite, sehingga instalasi demo lebih andal.
 - Mengajukan konsultasi BK: pilih kategori, tulis deskripsi singkat, pilih waktu yang diinginkan.
 - Melihat status dan jadwal konsultasi, serta riwayat pengajuannya sendiri.
 - Membatalkan pengajuan yang masih berstatus diajukan/ditinjau.
+- **Membalas langsung di web (fitur baru):** di halaman detail pengajuannya sendiri, siswa bisa melihat thread pesan dan mengirim balasan ke guru BK — tanpa menunggu catatan sesi selesai.
 
 **Guru BK**
 - Melihat daftar permohonan (antrean belum bertuan + pengajuan kewenangannya).
@@ -23,6 +24,7 @@ melalui CDN — tanpa proses build Vite, sehingga instalasi demo lebih andal.
 - Menyetujui (dengan jadwal final), menolak (dengan alasan), atau menjadwalkan ulang.
 - Mengelola jadwal konsultasi miliknya, dengan pengecekan bentrok waktu.
 - Menulis catatan sesi dan tindak lanjut, lalu menandai pengajuan selesai.
+- **Membalas langsung di web (fitur baru):** di halaman detail pengajuan (antrean umum atau tanggung jawabnya), guru BK bisa mengirim balasan yang langsung terlihat siswa di detail pengajuan yang sama.
 
 **Admin**
 - Mengelola akun siswa dan guru BK (tambah, edit, aktif/nonaktif).
@@ -39,6 +41,41 @@ melalui CDN — tanpa proses build Vite, sehingga instalasi demo lebih andal.
   menangani pengajuan itu, ia otomatis menjadi penanggung jawabnya.
 - Setelah bertuan, hanya guru BK penanggung jawab yang dapat membuka detailnya.
 - Siswa hanya dapat membuka pengajuannya sendiri.
+
+## Thread pesan / balasan langsung (fitur baru, 29 Oktober 2026)
+
+Guru BK bisa menjawab langsung di web, di halaman detail pengajuan — bukan
+hanya lewat catatan sesi setelah pengajuan selesai.
+
+- **Model + tabel baru:** `PesanKonsultasi` (`pesan_konsultasi`:
+  `pengajuan_id`, `pengirim_id`, `isi`, timestamps). Relasi:
+  `Pengajuan hasMany pesan`, `User hasMany pesanKonsultasi`.
+  Rute: `POST /siswa/pengajuan/{pengajuan}/pesan` dan
+  `POST /guru-bk/pengajuan/{pengajuan}/pesan`
+  (`PesanKonsultasiController@store`, validasi `StorePesanRequest`).
+- **Akses:** siswa hanya di pengajuannya sendiri; guru BK hanya di antrean
+  umum (belum bertuan) atau yang sudah menjadi tanggung jawabnya;
+  pengajuan orang lain = 403. **Admin tidak punya akses ke isi pesan**
+  sama sekali (tidak ada rute detail/pesan untuk admin; rekap tetap
+  agregat COUNT saja).
+- **Tampilan:** bagian "Pesan / Balasan" di bawah detail, di halaman detail
+  siswa DAN guru. Pesan diurutkan kronologis, berlabel nama + peran
+  (Siswa/Guru BK) + waktu; pesan sendiri rata kanan biru tua, pesan lawan
+  rata kiri abu muda. Form textarea full-width di HP, tombol Kirim
+  minimal 44px, tidak meluber di 390px.
+- **Perilaku yang sengaja dijaga:** mengirim pesan **tidak mengubah status**
+  pengajuan dan tidak menugaskan guru BK baru — status tetap diatur lewat
+  aksi tinjau/setujui/tolak/reschedule/selesai yang sudah ada, supaya
+  alur status lama tidak berubah.
+- **Validasi:** isi wajib (setelah trim tidak boleh kosong), maksimal
+  2000 karakter; pesan kosong/terlalu panjang gagal validasi dengan
+  pesan error yang jelas.
+- **Seeder demo:** 2 pesan contoh di pengajuan yang sudah disetujui
+  (1 dari siswa, 1 balasan guru) supaya thread terlihat saat demo.
+  Data demo fiktif, bukan data siswa asli.
+- **Yang belum ada di fitur ini (sengaja):** tidak ada notifikasi
+  WA/email dan tidak ada pesan real-time — siswa/guru melihat balasan
+  saat membuka detail pengajuannya.
 
 ## Cara install (langkah demi langkah)
 
@@ -130,15 +167,17 @@ routes/web.php               Rute terorganisir per peran dengan middleware auth 
 ## Hasil pengujian end-to-end (29 Oktober 2026, terverifikasi)
 
 Rincian lengkap kasus uji ada di [docs/pengujian-end-to-end.md](docs/pengujian-end-to-end.md),
-screenshot asli ada di [docs/screenshots/](docs/screenshots/) (23 file: 13 desktop + 7 mobile + 3 tablet).
+screenshot asli ada di [docs/screenshots/](docs/screenshots/) (26 file: 13 desktop + 7 mobile + 3 tablet + 3 thread pesan).
 
-- **Tes HTTP otomatis** (`tests/Feature/BkEndToEndTest.php`, perintah
-  `php artisan test --filter=BkEndToEndTest`): **6 metode tes, 71 assertions,
-  semua LULUS** — mencakup siswa (buat valid/tidak valid, batalkan, blokir
-  akses orang lain), guru BK (tinjau, setujui, bentrok jadwal → 422, tolak
-  tanpa/dengan alasan, reschedule, selesai tanpa/dengan catatan, blokir
-  guru lain), admin (CRUD akun/kelas/kategori, toggle, blokir nonaktifkan
-  diri sendiri, rekap tanpa deskripsi), dan blokir lintas peran (403).
+- **Tes HTTP otomatis penuh** (`php artisan test`): **14 tes, 102 assertions,
+  semua LULUS** — 6 `BkEndToEndTest` (71 assertions: siswa buat valid/tidak
+  valid, batalkan, blokir akses orang lain; guru BK tinjau, setujui,
+  bentrok jadwal → 422, tolak tanpa/dengan alasan, reschedule, selesai
+  tanpa/dengan catatan, blokir guru lain; admin CRUD akun/kelas/kategori,
+  toggle, blokir nonaktifkan diri sendiri, rekap tanpa deskripsi; blokir
+  lintas peran 403) + 6 `PesanKonsultasiTest` (thread pesan: kirim
+  siswa/guru, antrean umum, 403 siswa lain/guru lain/admin, validasi
+  kosong/>2000 karakter) + 2 ExampleTest.
 - **Tes curl HTTP nyata** ke `php artisan serve`: login 200 dengan judul
   resmi + Bootstrap 5.3.3 + Bootstrap Icons 1.11.3 + meta viewport; siswa
   buat pengajuan 302 → detail menampilkan deskripsinya; guru setujui 302 →
@@ -188,6 +227,24 @@ login demo admin via URL publik POST → 302 ke dashboard, dashboard dan
 rekap admin 200, isi database deploy: users 6, pengajuan 7 (semua status
 masing-masing 1). Layanan lain tetap aktif dan 200 (8091, 8092, 8085).
 
+Verifikasi deploy fitur thread pesan (29 Oktober 2026, setelah perbaikan
+cache di bawah): migrasi `2026_10_29_000007_create_pesan_konsultasi_table`
+sukses di live, service `bk-sman1` active, login lokal dan publik 200,
+uji kirim pesan live via HTTP (login guru1 → POST pesan → detail guru 200
+menampilkan pesan → detail siswa pemilik 200 menampilkan balasan guru)
+**LULUS**, lalu pesan tes live tersebut dihapus sehingga data live
+kembali bersih (total pesan live = 0 setelah penghapusan).
+
+> ⚠️ Catatan deploy — cache `bootstrap/cache/packages.php` basi:
+> File cache hasil generate di mesin dev (yang mendaftarkan paket dev-only
+> `laravel/pail`) sempat ikut tersalin ke deploy dan membuat live 500
+> sesaat setelah deploy fitur ini. Sudah diperbaiki dengan menghapus
+> file cache basi itu di workspace dan di deploy, lalu menjalankan
+> `php artisan package:discover` ulang dari vendor production (tanpa Pail)
+> sebelum `config:cache`/`route:cache`/`view:cache`. Jangan pernah
+> menyalin `bootstrap/cache/*.php` hasil generate mesin dev ke deploy;
+> cache selalu dibangun ulang di server deploy.
+
 > ⚠️ PERINGATAN DEMO — WAJIB DIBACA SEBELUM PAKAI DATA ASLI:
 > Akun demo di atas memakai password `password123` dan VPS ini menghadap
 > internet. Akun demo ini HANYA untuk demo/sidang KP. Sebelum aplikasi ini
@@ -198,8 +255,8 @@ masing-masing 1). Layanan lain tetap aktif dan 200 (8091, 8092, 8085).
 
 ## Yang belum ada di versi 1 (sengaja ditunda)
 
-- Notifikasi WhatsApp/email.
-- Chat di dalam aplikasi dan lampiran berkas.
+- Notifikasi WhatsApp/email (termasuk untuk balasan thread pesan — belum ada).
+- Lampiran berkas pada pengajuan/pesan.
 - Penjadwalan otomatis dan dashboard grafik lanjutan.
 - Pengujian MySQL: di lingkungan pengujian tidak ada server MySQL/MariaDB,
   sehingga yang terverifikasi penuh adalah SQLite. Langkah MySQL di atas

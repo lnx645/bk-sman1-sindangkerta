@@ -17,9 +17,9 @@ karena data tersebut tidak diberikan.
 
 | Aktor | Dapat dilakukan | Tidak boleh dilakukan |
 |-------|-----------------|-----------------------|
-| Siswa | Login, lihat profil, ajukan konsultasi, lihat status/jadwal/riwayat miliknya, batalkan pengajuan diajukan/ditinjau | Melihat pengajuan siswa lain; melihat catatan sesi internal guru BK (kecuali tindak lanjut untuknya) |
-| Guru BK | Lihat antrean + pengajuan kewenangannya, tinjau, setujui/tolak/jadwalkan ulang, kelola jadwalnya, tulis catatan sesi & tindak lanjut, lihat riwayat kewenangannya | Membuka pengajuan yang sudah ditangani guru BK lain |
-| Admin | Kelola akun siswa/guru BK, kelola kelas & kategori, aktif/nonaktif akun, lihat rekap statistik | Membaca isi deskripsi masalah siswa dan isi catatan sesi lewat rekap |
+| Siswa | Login, lihat profil, ajukan konsultasi, lihat status/jadwal/riwayat miliknya, batalkan pengajuan diajukan/ditinjau, kirim dan baca pesan di thread pengajuannya sendiri | Melihat pengajuan siswa lain; melihat catatan sesi internal guru BK (kecuali tindak lanjut untuknya) |
+| Guru BK | Lihat antrean + pengajuan kewenangannya, tinjau, setujui/tolak/jadwalkan ulang, kelola jadwalnya, tulis catatan sesi & tindak lanjut, lihat riwayat kewenangannya, kirim dan baca pesan di thread antrean umum atau pengajuan tanggung jawabnya | Membuka pengajuan yang sudah ditangani guru BK lain |
+| Admin | Kelola akun siswa/guru BK, kelola kelas & kategori, aktif/nonaktif akun, lihat rekap statistik | Membaca isi deskripsi masalah siswa, isi catatan sesi, dan isi pesan konsultasi lewat rekap (admin tidak punya rute detail/pesan) |
 
 ## 3. Use case per peran
 
@@ -30,6 +30,7 @@ karena data tersebut tidak diberikan.
 - UC-S4 Melihat status dan jadwal konsultasi.
 - UC-S5 Melihat riwayat pengajuan miliknya.
 - UC-S6 Membatalkan pengajuan yang masih diajukan/ditinjau.
+- UC-S7 (baru, 29 Oktober 2026) Mengirim dan membaca pesan di thread pengajuannya sendiri (balasan langsung ke guru BK di web).
 
 **Guru BK**
 - UC-G1 Melihat daftar permohonan.
@@ -41,6 +42,7 @@ karena data tersebut tidak diberikan.
 - UC-G7 Memperbarui status layanan menjadi selesai.
 - UC-G8 Menulis catatan sesi dan tindak lanjut.
 - UC-G9 Melihat riwayat konsultasi kewenangannya.
+- UC-G10 (baru, 29 Oktober 2026) Mengirim dan membaca pesan di thread antrean umum atau pengajuan tanggung jawabnya (balasan langsung ke siswa di web, tanpa menunggu catatan sesi selesai).
 
 **Admin**
 - UC-A1 Mengelola akun siswa dan guru BK.
@@ -79,6 +81,7 @@ Aturan:
 - Admin tidak boleh menonaktifkan akunnya sendiri.
 - Jadwal final (`waktu_final`) harus di masa depan saat dibuat/diubah.
 - Deskripsi pengajuan minimal 10 karakter dan maksimal 1000 karakter.
+- Pesan konsultasi: wajib (setelah trim tidak boleh kosong), maksimal 2000 karakter; mengirim pesan tidak mengubah status pengajuan dan tidak menugaskan guru BK baru.
 - Rekap dihitung dari tabel `pengajuan` (agregat), bukan dari tabel rekap
   terpisah, agar tidak ada data ganda yang bisa berbeda.
 
@@ -99,7 +102,11 @@ Aturan:
 
 ## 7. Batasan versi 1
 
-Tidak ada notifikasi WhatsApp/email, chat dalam aplikasi, lampiran berkas,
-penjadwalan otomatis, atau dashboard grafik lanjutan. Fitur-fitur itu dapat
-ditambahkan pada versi berikutnya tanpa mengubah struktur tabel inti di atas,
-kecuali penambahan tabel notifikasi/lampiran bila memang diperlukan.
+Tidak ada notifikasi WhatsApp/email (termasuk untuk balasan thread pesan —
+tidak ada pesan real-time; balasan dibaca saat membuka detail pengajuan),
+lampiran berkas, penjadwalan otomatis, atau dashboard grafik lanjutan.
+Catatan: thread pesan konsultasi (bagian 3, UC-S7/UC-G10) sudah ditambahkan
+29 Oktober 2026 dan bukan lagi bagian dari batasan ini; fitur-fitur lain
+di atas dapat ditambahkan pada versi berikutnya tanpa mengubah struktur
+tabel inti, kecuali penambahan tabel notifikasi/lampiran bila memang
+diperlukan.

@@ -59,5 +59,6 @@
         </form>
     </div></div></div>
 </div>
+@include('partials.thread-pesan', ['pengajuan' => $pengajuan, 'routePesan' => route('guru.pengajuan.pesan.store', $pengajuan)])
 <a class="btn btn-outline-secondary mt-3" href="{{ route('guru.pengajuan.index') }}"><i class="bi bi-arrow-left"></i> Kembali</a>
 @endsection

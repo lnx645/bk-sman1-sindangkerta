@@ -14,6 +14,11 @@ perbaikan bug yang ditemukan selama pengujian (lihat bagian Bug yang Ditemukan).
 Perintah: `php artisan test --filter=BkEndToEndTest`
 Hasil akhir: `Tests: 6 passed (71 assertions)`.
 
+Putaran pengujian terbaru (fitur thread pesan, 29 Oktober 2026):
+`php artisan test` penuh = **14 passed (102 assertions)** — 6 BkEndToEndTest
++ 6 PesanKonsultasiTest + 1 ExampleTest Feature + 1 ExampleTest Unit.
+Kasus thread pesan ada di bagian 8 di bawah.
+
 | ID | Kasus | Peran | Langkah & data | Hasil yang diharapkan | Hasil aktual | Status |
 |----|-------|-------|----------------|------------------------|--------------|--------|
 | E01 | Buat pengajuan valid | Siswa | POST /siswa/pengajuan, kategori aktif, deskripsi ≥10 karakter, waktu di masa depan | Redirect, pengajuan tersimpan status `diajukan` milik siswa login | Redirect, `pengajuan` tersimpan sesuai | LULUS |
@@ -193,3 +198,43 @@ overflow = halaman meluber ke samping):
 Pemeriksaan visual mobile (login, dashboard siswa, detail guru, rekap, menu terbuka) lolos:
 tidak ada teks terpotong, kartu menumpuk 1 kolom, tombol/input full-width, menu hamburger
 membuka daftar menu per peran dengan benar.
+
+## 8. Fitur thread pesan / balasan langsung (29 Oktober 2026)
+
+Perintah: guru BK harus bisa menjawab langsung di web, bukan hanya lewat
+catatan sesi setelah selesai. Implementasi: model `PesanKonsultasi` +
+migrasi `2026_10_29_000007_create_pesan_konsultasi_table`,
+`PesanKonsultasiController@store` (rute POST siswa + guru), partial
+`partials/thread-pesan.blade.php` di halaman detail siswa dan guru,
+validasi `StorePesanRequest` (isi wajib setelah trim, maks 2000 karakter),
+seeder 2 pesan contoh di pengajuan yang sudah disetujui.
+
+Tes baru `tests/Feature/PesanKonsultasiTest.php` — 6 metode tes, semua LULUS:
+
+| ID | Kasus | Hasil |
+|----|-------|-------|
+| P01 | Siswa kirim pesan ke pengajuannya sendiri | Redirect, pesan tersimpan, status tetap `diajukan`, isi tampil di detail siswa |
+| P02 | Guru kirim balasan ke tanggung jawabnya, terlihat siswa | Redirect, pesan tersimpan, status tetap `disetujui`, isi tampil di detail siswa |
+| P03 | Guru membalas antrean umum (guru_bk_id null) | Redirect, pesan tersimpan |
+| P04 | Siswa lain dan guru lain ditolak | GET detail dan POST pesan keduanya 403, 0 pesan baru |
+| P05 | Admin tidak bisa akses pesan | GET/POST detail siswa dan guru = 403 (middleware role); rekap admin 200 dan TIDAK menampilkan isi pesan rahasia tes |
+| P06 | Pesan kosong (hanya spasi) dan >2000 karakter gagal validasi | Error validasi `isi`, 0 pesan baru |
+
+Tes penuh setelah fitur ini: `php artisan test` = **14 passed (102 assertions)**
+(6 BkEndToEndTest + 6 PesanKonsultasiTest + ExampleTest Feature + ExampleTest Unit).
+Catatan: ExampleTest Feature bawaan Laravel awalnya mengira `/` harus 200,
+padahal rute `/` memang sengaja mengalihkan ke login (302); tes itu
+disesuaikan ke `assertRedirect('/login')` — bukan perubahan perilaku aplikasi.
+
+Verifikasi dari nol: `migrate:fresh --force --seed` sukses (10 migrasi,
+termasuk tabel `pesan_konsultasi`), seeder menghasilkan 7 pengajuan dan
+2 pesan contoh di pengajuan yang sudah disetujui.
+
+Screenshot thread (baru, tidak menghapus screenshot lama, di `docs/screenshots/`):
+- `24-thread-pesan-siswa.png` — detail siswa desktop 1280×1263, thread "Pesan / Balasan" dengan pesan siswa + balasan guru, overflow=false.
+- `25-thread-pesan-guru.png` — detail guru desktop 1280×2126, thread yang sama + kartu aksi guru, overflow=false.
+- `26-thread-pesan-mobile.png` — detail siswa mobile 390×1699, thread menumpuk rapi, overflow=false.
+
+Pengecualian fitur ini (sengaja): tidak ada notifikasi WA/email dan tidak
+ada pesan real-time — balasan dibaca saat membuka detail pengajuan.
+Mengirim pesan tidak mengubah status dan tidak menugaskan guru BK baru.

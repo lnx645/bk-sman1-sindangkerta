@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Pengajuan extends Model
@@ -64,6 +65,12 @@ class Pengajuan extends Model
     public function catatanSesi(): HasOne
     {
         return $this->hasOne(CatatanSesi::class);
+    }
+
+    /** Thread pesan konsultasi per pengajuan (diurutkan di controller). */
+    public function pesan(): HasMany
+    {
+        return $this->hasMany(PesanKonsultasi::class, 'pengajuan_id');
     }
 
     /** Apakah pengajuan ini boleh dilihat pengguna tertentu (privasi). */

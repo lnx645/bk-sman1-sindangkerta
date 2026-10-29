@@ -23,7 +23,7 @@ class PengajuanController extends Controller
     public function show(Pengajuan $pengajuan)
     {
         $this->authorizeAccess($pengajuan);
-        $pengajuan->load(['siswa.kelas', 'kategori', 'jadwal', 'catatanSesi']);
+        $pengajuan->load(['siswa.kelas', 'kategori', 'jadwal', 'catatanSesi', 'pesan' => fn ($q) => $q->orderBy('created_at')->orderBy('id')->with('pengirim')]);
 
         return view('guru.pengajuan.show', compact('pengajuan'));
     }
