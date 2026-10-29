@@ -25,8 +25,20 @@
         .btn-outline-primary { color: var(--bk-navy); border-color: var(--bk-navy); }
         .btn-outline-primary:hover { background-color: var(--bk-navy); border-color: var(--bk-navy); color: #fff; }
         .text-primary { color: var(--bk-navy) !important; }
-        .bk-navbar { background: linear-gradient(90deg, #0f2d4d, var(--bk-navy-2)); box-shadow: 0 2px 12px rgba(15, 45, 77, .25); }
-        .brand-mark { width: 44px; height: 44px; border-radius: 50%; background: var(--bk-gold); color: #14375a; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; }
+        .bk-navbar { background: linear-gradient(90deg, #0f2d4d, var(--bk-navy-2)); box-shadow: 0 2px 12px rgba(15, 45, 77, .25); padding-top: .4rem; padding-bottom: .4rem; }
+        /* Navbar SATU BARIS di semua lebar: container tidak boleh wrap, brand terpotong
+           rapi (ellipsis) bila sempit, tombol tidak pernah jatuh ke baris kedua. */
+        .bk-navbar .container-fluid { flex-wrap: nowrap !important; gap: .5rem; padding-left: .75rem; padding-right: .75rem; }
+        .bk-navbar .navbar-brand { flex: 1 1 auto; min-width: 0; margin-right: 0; }
+        .bk-navbar .navbar-toggler { flex: 0 0 auto; padding: .4rem .55rem; min-height: 44px; }
+        .bk-navbar .navbar-actions { flex: 0 0 auto; }
+        .brand-mark { width: 36px; height: 36px; border-radius: 50%; background: var(--bk-gold); color: #14375a; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; }
+        /* Logo sekolah: kotak kecil ber-radius kecil (BUKAN lingkaran penuh) supaya
+           lambang segi lima tidak terpotong ujungnya; rasio aspek dijaga
+           object-fit: contain sehingga logo tidak pernah gepeng. */
+        .brand-logo { width: 40px; height: 40px; border-radius: .4rem; object-fit: contain; background: #fff; padding: 2px; flex: 0 0 auto; }
+        .brand-title { min-width: 0; overflow: hidden; }
+        .brand-title .brand-line { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .brand-subtitle { font-size: .8rem; color: #d7e3f0; }
         .user-chip { background: rgba(255, 255, 255, .14); color: #fff; border: 1px solid rgba(255, 255, 255, .25); border-radius: 999px; padding: .35rem .8rem; }
         .sidebar { min-height: calc(100vh - 56px); }
@@ -34,7 +46,8 @@
         .sidebar .nav-link.active, .sidebar .nav-link:hover { background: #dcebf7; color: var(--bk-navy); }
         .sidebar .nav-link.active { border-left: 4px solid var(--bk-gold); }
         .bk-mobile-nav { background: #fff; border-bottom: 1px solid #dde5ec; }
-        .bk-mobile-nav a { color: var(--bk-navy); font-weight: 600; padding: .8rem 1rem; display: block; text-decoration: none; border-bottom: 1px solid #eef2f6; min-height: 44px; }
+        .bk-mobile-nav a, .bk-mobile-nav .mobile-logout { color: var(--bk-navy); font-weight: 600; padding: .8rem 1rem; display: block; text-decoration: none; border-bottom: 1px solid #eef2f6; min-height: 44px; }
+        .bk-mobile-nav .mobile-logout { background: none; border: none; border-bottom: 1px solid #eef2f6; width: 100%; text-align: left; font-size: 1rem; }
         .bk-mobile-nav a.active { background: #dcebf7; border-left: 4px solid var(--bk-gold); }
         .bk-mobile-nav .mobile-user { padding: .8rem 1rem; color: var(--bk-muted); font-size: .9rem; }
         /* Tabel: scroll hanya di dalam wadahnya, halaman tidak pernah meluber. */
@@ -94,21 +107,31 @@
 <nav class="navbar navbar-expand-lg navbar-dark bk-navbar sticky-top">
     <div class="container-fluid">
         <a class="navbar-brand d-flex align-items-center gap-2" href="{{ route('dashboard') }}">
-            <span class="brand-mark"><i class="bi bi-mortarboard-fill fs-5"></i></span>
+            {{-- Logo sekolah: public/img/logo-sekolah.png, dikirim langsung oleh
+                 user/pemesan (BUKAN diambil dari Google). Bila file itu hilang,
+                 fallback-nya ikon topi wisuda. Jangan ganti dengan logo sekolah lain. --}}
+            @if(file_exists(public_path('img/logo-sekolah.png')))
+                <img class="brand-logo" src="{{ asset('img/logo-sekolah.png') }}" alt="Logo SMAN 1 Sindangkerta">
+            @else
+                <span class="brand-mark"><i class="bi bi-mortarboard-fill"></i></span>
+            @endif
             <span class="brand-title">
-                <span class="d-block fw-bold d-sm-none">BK &middot; SMAN 1 Sindangkerta</span>
-                <span class="d-none d-sm-block lh-1 fw-bold">Sistem Informasi Bimbingan dan Konseling</span>
+                <span class="brand-line fw-bold d-sm-none">BK &middot; SMAN 1 Sindangkerta</span>
+                <span class="brand-line lh-1 fw-bold d-none d-sm-block">Sistem Informasi Bimbingan dan Konseling</span>
                 <span class="brand-subtitle d-none d-sm-block">SMAN 1 Sindangkerta</span>
             </span>
         </a>
         @auth
-        <button class="navbar-toggler d-md-none ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#bkMobileNav" aria-controls="bkMobileNav" aria-expanded="false" aria-label="Buka/tutup menu">
+        {{-- Di HP hanya ada brand + hamburger dalam satu baris; tombol Keluar pindah
+             ke dalam menu hamburger (di bawah), supaya navbar tidak membungkus ke
+             baris kedua seperti sebelumnya. --}}
+        <button class="navbar-toggler d-md-none" type="button" data-bs-toggle="collapse" data-bs-target="#bkMobileNav" aria-controls="bkMobileNav" aria-expanded="false" aria-label="Buka/tutup menu">
             <span class="navbar-toggler-icon"></span>
         </button>
         @endauth
-        <div class="d-flex align-items-center gap-2 text-white">
+        <div class="navbar-actions d-none d-md-flex align-items-center gap-2 text-white">
             @auth
-                <span class="user-chip d-none d-sm-inline"><i class="bi bi-person-circle"></i> {{ auth()->user()->name }} · {{ auth()->user()->role }}</span>
+                <span class="user-chip"><i class="bi bi-person-circle"></i> {{ auth()->user()->name }} · {{ auth()->user()->role }}</span>
                 <form method="POST" action="{{ route('logout') }}" class="m-0">@csrf
                     <button class="btn btn-outline-light btn-sm" type="submit"><i class="bi bi-box-arrow-right"></i> Keluar</button>
                 </form>
@@ -136,6 +159,9 @@
         <a class="{{ request()->routeIs('admin.kategori.*') ? 'active' : '' }}" href="{{ route('admin.kategori.index') }}"><i class="bi bi-tags"></i> Kelola Kategori</a>
         <a class="{{ request()->routeIs('admin.rekap.*') ? 'active' : '' }}" href="{{ route('admin.rekap.index') }}"><i class="bi bi-bar-chart"></i> Rekapitulasi</a>
     @endif
+    <form method="POST" action="{{ route('logout') }}" class="m-0">@csrf
+        <button class="mobile-logout" type="submit"><i class="bi bi-box-arrow-right"></i> Keluar</button>
+    </form>
 </div>
 @endauth
 

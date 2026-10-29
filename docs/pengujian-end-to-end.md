@@ -290,3 +290,47 @@ Screenshot bukti audit ini (tidak menghapus screenshot lama, di `docs/screenshot
 Tes setelah audit: `php artisan test` di staging = **14 passed (102 assertions)**,
 tidak ada file aplikasi yang diubah. Pengecualian tetap: cek visual di HP pengguna
 sendiri adalah langkah terakhir; MySQL tetap belum teruji (SQLite terverifikasi).
+
+## 10. Navbar satu baris + logo sekolah resmi (29 Oktober 2026)
+
+Keluhan user (dengan screenshot HP): navbar jelek — brand + ikon di baris atas,
+tombol hamburger + Keluar sendirian di baris bawah. Perbaikan di
+`resources/views/layouts/app.blade.php` saja (fungsi/logika tidak berubah):
+container navbar `flex-wrap: nowrap`, padding navbar dikecilkan, ikon brand
+40px, judul brand dipendekkan di HP dengan ellipsis, tombol Keluar di HP pindah
+ke dalam menu hamburger, di desktop chip nama + Keluar tetap di navbar.
+
+**Logo:** awalnya logo resmi TIDAK ditemukan di sumber publik (situs resmi
+tidak bisa di-resolve, pencarian hanya mengembalikan logo sekolah lain, foto
+Dapodik bukan logo), sehingga slot logo dibuat dengan fallback ikon dan
+LARANGAN memakai logo sekolah lain. Kemudian user mengirim sendiri file logo
+resmi SMAN 1 Sindangkerta (lambang segi lima biru, "SMA NEGERI 1" /
+"SINDANGKERTA", sayap kuning, obor, buku). File itu di-crop ketat ke lambang
+segi limanya saja (buang sebagian besar latar awan biru, tanpa memotong
+tulisan/sayap/obor/buku), dikonversi ke PNG 256×256, disimpan sebagai
+`public/img/logo-sekolah.png`. Navbar kini memakai file itu sebagai ikon
+brand (fallback ikon hanya bila file hilang).
+
+Verifikasi terukur (staging, headless Chromium, 4 halaman × 4 breakpoint):
+
+| Halaman | 360px | 390px | 768px | 1280px |
+|---|---|---|---|---|
+| Login | overflow=false | overflow=false | overflow=false | overflow=false |
+| Dashboard siswa | overflow=false | overflow=false | overflow=false | overflow=false |
+| Detail siswa + thread | overflow=false | overflow=false | overflow=false | overflow=false |
+| Detail guru + thread | overflow=false | overflow=false | overflow=false | overflow=false |
+
+Bukti satu baris: tinggi navbar konstan 63px di semua lebar; di HP (360/390px)
+brand atas 6px–bawah 56px dan hamburger atas 9px–bawah 54px — sejajar dalam
+satu baris, tidak ada baris kedua. Logo terukur 40×40 tampil (natural
+256×256, rasio terjaga, tidak gepeng), src `/img/logo-sekolah.png`,
+alt "Logo SMAN 1 Sindangkerta". Tes penuh setelah perubahan:
+`php artisan test` = **14 passed (102 assertions)**.
+
+Screenshot bukti baru (di `docs/screenshots/`, screenshot lama tidak dihapus):
+- `33-navbar-baru-mobile-390.png` — navbar satu baris + logo, dashboard siswa, 390px (tertutup)
+- `34-navbar-menu-mobile-390.png` — menu hamburger terbuka + Keluar di dalamnya, 390px
+- `35-navbar-mobile-360.png` — navbar satu baris + logo, 360px
+- `36-navbar-desktop-1280.png` — navbar + logo, desktop 1280px
+- `37-detail-siswa-thread-390.png` — detail siswa + thread + logo di navbar, 390px
+- `38-detail-guru-thread-390.png` — detail guru + thread + logo di navbar, 390px

@@ -200,6 +200,24 @@ screenshot asli ada di [docs/screenshots/](docs/screenshots/) (26 file: 13 deskt
 
 - **Responsif (mobile-first, 2026-10-29):** navbar hamburger collapse di HP, kartu 1 kolom di HP / 2 kolom di tablet / 3-4 kolom di desktop, tabel .table-responsive terkungkung, tombol minimal 44px di HP. Cek overflow terukur: 390px, 360px, dan 768px semua `overflow=false` untuk halaman kunci (login, dashboard siswa/admin, form, riwayat, detail guru, rekap, kelola akun); bukti screenshot mobile + tablet ada di `docs/screenshots/` (file 14-23).
 
+## Navbar + logo sekolah (29 Oktober 2026)
+
+- **Navbar satu baris di HP:** sebelumnya brand + ikon di baris atas dan tombol
+  hamburger + Keluar sendirian di baris bawah (keluhan user: "Jelek navbarnya").
+  Perbaikan: container navbar `flex-wrap: nowrap`, padding navbar dikecilkan,
+  ikon brand 40px, judul brand dipendekkan di HP ("BK · SMAN 1 Sindangkerta",
+  terpotong rapi dengan ellipsis bila sempit), tombol Keluar di HP pindah ke
+  dalam menu hamburger, sedangkan di desktop (≥768px) chip nama + tombol Keluar
+  tetap tampil di navbar. Tinggi navbar terukur konstan 63px di semua lebar.
+- **Logo sekolah:** file `public/img/logo-sekolah.png` (256×256 PNG, hasil crop
+  ketat lambang segi lima dari file yang dikirim langsung oleh user/pemesan —
+  BUKAN diambil dari Google, dan BUKAN logo sekolah lain). Navbar menampilkan
+  gambar itu 40×40 dengan `object-fit: contain` sehingga rasio aspek terjaga
+  dan logo tidak gepeng; bila file logo hilang, fallback-nya ikon topi wisuda.
+- **Cara mengganti logo (tanpa ubah kode):** timpa file
+  `public/img/logo-sekolah.png` dengan file PNG logo resmi yang baru, lalu
+  redeploy (restart service). Nama file dan lokasinya harus sama persis.
+
 ## Deploy VPS (live)
 
 **URL live: http://103.147.33.11:8093**
